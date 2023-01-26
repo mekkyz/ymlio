@@ -213,7 +213,7 @@ var splitYmlCmd = &cobra.Command{
 
 		keys := viper.AllKeys()
 
-		if len(onlyFileNames) > 1 {
+		if len(onlyFileNames) >= 1 {
 			fmt.Println(onlyFileNames)
 
 			var filteredKeys []string
