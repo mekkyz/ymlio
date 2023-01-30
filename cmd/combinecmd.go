@@ -2,47 +2,55 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"yaml-processing/utils"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
+// This function sets up the combine functionality
 var combineCmd = &cobra.Command{
 	Use:   "combine",
 	Short: "combine multiple YAML files",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// getting all arguments passed in from the command line after the 'combine' command
 		args = args[:]
 
-		// get the last file passed in
-		lastArgs := args[len(args)-1]
+		// get the last file name passed in which the file will be combined, for example
+		// if 'splityaml combine spectra.yml storage.yml hello.yml' is passed in, the lastArgsFileName below will get the hello.yml
+		lastArgsFileName := args[len(args)-1]
 
-		file, err := os.OpenFile(lastArgs, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-		args = args[:len(args)-1]
-
+		fileNameHanchorFileName, err := utils.HandleAnchor(args[0])
 		if err != nil {
-			fmt.Println(err)
+			log.Fatalln(err)
 		}
-		defer file.Close()
 
-		for _, fileName := range args {
-			fileNameHanchor, err := utils.HandleAnchor(fileName)
+		viper.Set(fileNameHanchorFileName, "")
+		viper.SetConfigType("yml")
+		err = viper.ReadInConfig()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		for _, fileName := range args[:len(args)-1] {
+			fileNameHanchorFileName, err = utils.HandleAnchor(fileName)
+
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fileText, err := ioutil.ReadFile(fileNameHanchor)
+			viper.Set(fileNameHanchorFileName, viper.AllSettings())
+			viper.SetConfigFile(fileNameHanchorFileName)
+			viper.SetConfigType("yml")
+			err = viper.MergeInConfig()
 			if err != nil {
-				fmt.Println(err)
+				log.Fatalln(err)
 			}
 
-			config := fmt.Sprintf("%s:\n\t%s\n\n", fileName, fileText)
-			_, err = file.WriteString(config)
-			fmt.Println(fileName)
 		}
 
+		viper.WriteConfigAs(lastArgsFileName)
 		fmt.Println("Done")
 	},
 }
