@@ -193,13 +193,10 @@ func GetFileNameAndKeys(keys []string) ([]string, []ImportData) {
 // production:
 // port: 2000
 // The function accepts a slice that contains spectra.yml
-func SplitFile(keys []string) string {
+func SplitFile(keys []string) interface{} {
 
 	// get the fileName and the data to be imported with IMPORT tag
 	fileNames, importData := GetFileNameAndKeys(keys)
-
-	// creating a variables that will hold the configuration values
-	var configValues string
 
 	// Create a map to store the fileName with RAW tag
 	var rawFileNames = make(map[string]string)
@@ -224,7 +221,7 @@ func SplitFile(keys []string) string {
 		}
 
 		// Get the config values for each file name
-		configValues = viper.GetString(fileName)
+		configValues := viper.Get(fileName)
 		// Check if the file name ends with .yml
 		if strings.HasSuffix(fileName, ".yml") {
 			// Check if the file already exists and create it if it doesn't
@@ -232,12 +229,13 @@ func SplitFile(keys []string) string {
 			// Save the config values to the yml file
 			SaveConfig(fileName, configValues)
 		}
+		fmt.Println()
 
 	}
-
 	RenameRaw(rawFileNames)
 	SaveImportData(importData)
-	return configValues
+	output := viper.AllSettings()
+	return output
 }
 
 // This function accepts config keys and filenames as a slice and returns config keys that have the fileNames passed in, in them
@@ -323,23 +321,24 @@ var splitYmlCmd = &cobra.Command{
 			fmt.Println(configValues)
 			fmt.Println("Done")
 			return
-		}
-
-		// if there is more than one fileNames passed in along the --only flag
-		if len(onlyFileNames) > 1 {
+		} else if len(onlyFileNames) > 1 {
+			// if there is more than one fileNames passed in along the --only flag
 			fmt.Println(onlyFileNames)
 
 			// get the config keys that have onlyFileNames in them
 			filteredKeys := GetFilteredKeys(keys, onlyFileNames)
 
+			fmt.Println(filteredKeys)
+			os.Exit(1)
 			SplitFile(filteredKeys)
 			fmt.Println("Done")
 			return
 
 		} else {
 			// if there is no --only flag split the file with all the keys
-
+			fmt.Println("hello")
 			SplitFile(keys)
+			os.Exit(1)
 			fmt.Println("Done")
 		}
 
