@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
-	"yaml-processing/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -286,7 +285,7 @@ var splitYmlCmd = &cobra.Command{
 		fmt.Println("Splitting this file =>", fileLocation)
 		// yq -r -o=json sampleanchor.yml > config.json
 		// run it through the HandleAnchor function then return the fileName
-		fileLocation, err := utils.HandleAnchor(fileLocation)
+		fileLocation, err := HandleAnchor(fileLocation)
 		// If there's an error while handling Anchor
 		if err != nil {
 			// exit the program with the error

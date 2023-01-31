@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"yaml-processing/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -52,7 +51,7 @@ var combineCmd = &cobra.Command{
 			// checking if the file ends with .yml file, meaning if it's a yaml file
 			if strings.Contains(fileName, ".yml") && strings.HasSuffix(fileName, ".yml") {
 				// handle the anchors first
-				fileNameHanchor, err := utils.HandleAnchor(fileName)
+				fileNameHanchor, err := HandleAnchor(fileName)
 				if err != nil {
 					log.Fatalln(err)
 				}

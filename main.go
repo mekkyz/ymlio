@@ -5,7 +5,8 @@ package main
 
 import (
 	"fmt"
-	"yaml-processing/cmd"
+
+	"ymlio/cmd"
 )
 
 func main() {
