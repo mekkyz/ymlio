@@ -4,19 +4,32 @@ Copyright © 2023 Mostafa Mekky <mos.mekky@gmail.com>
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+var rootCmd = &cobra.Command{
 	Use:   "ymlio",
 	Short: "ymlio splits and combines yaml files",
 	Long: `
 ymlio is a CLI Application that allow users to easily split or combine yaml files.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("\nHello, welcome to ymlio: The yml file tool.\n\nymlio must be run with subcommands; do --help for more\n\n")
 
+	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
+}
+
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
