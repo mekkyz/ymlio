@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// convert JSON to YAML
+// Convert JSON to YAML
 func convertJsonToYml(inputJsonName string) (string, error) {
 	// get the content of the JSON
 	jsonData, err := os.ReadFile(inputJsonName)
@@ -18,7 +18,6 @@ func convertJsonToYml(inputJsonName string) (string, error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	var jsonMap map[string]interface{}
 	err = json.Unmarshal(jsonData, &jsonMap)
 	if err != nil {
@@ -37,18 +36,16 @@ func convertJsonToYml(inputJsonName string) (string, error) {
 	return outputYmlName, nil
 }
 
-// convert YAML to JSON
+// Convert YAML to JSON
 func convertYmlToJson(inputYmlName string) (string, error) {
-	// making use of yq processor command line program to do the conversion
+	// Making use of yq processor cli program to do the conversion
 	cmd := exec.Command("yq", "-r", "-o=json", inputYmlName)
-
-	// get the output of the command
+	// Get the output of the command
 	output, err := cmd.CombinedOutput()
-	// get the filename to save it with
+	// Get the filename to save it with
 	outputJsonName := strings.Replace(inputYmlName, ".yml", ".json", 1)
 	if err != nil {
 		log.Fatalln(err)
-
 	} else {
 		// Save the file as .json
 		os.WriteFile(outputJsonName, output, 0644)
@@ -56,7 +53,7 @@ func convertYmlToJson(inputYmlName string) (string, error) {
 	return outputJsonName, nil
 }
 
-// handling anchors
+// Handling anchors
 func handleAnchor(inputYmlFileName string) (string, error) {
 	jsonFileName, err := convertYmlToJson(inputYmlFileName)
 	if err != nil {
