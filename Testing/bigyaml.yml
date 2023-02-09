@@ -100,7 +100,7 @@ user_props.yml:
 
 anchorstest.yml:
   default: &default
-   cd  adapter: postgresql
+    adapter: postgresql
     encoding: unicode
     host: postgres
     password: 123456
