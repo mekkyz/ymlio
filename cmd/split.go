@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -274,16 +272,27 @@ var splitCmd = &cobra.Command{
 			// Get the config keys that have onlyFileName in them
 			filteredKeys := getFilteredKeys(keys, onlyFileNames)
 			splitFile(filteredKeys)
-			// Print it to the terminal
-			// fmt.Println(configValues)
-			cmd := exec.Command("yq", "eval-all", onlyFileNames[0])
-			var out bytes.Buffer
-			cmd.Stdout = &out
-			err := cmd.Run()
+
+			input, err := os.ReadFile(onlyFileNames[0])
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
-			fmt.Println(out.String())
+
+			var yamlData interface{}
+			err = yaml.Unmarshal(input, &yamlData)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			output, err := yaml.Marshal(yamlData)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			fmt.Println(string(output))
 			return
 		} else if len(onlyFileNames) > 1 {
 			// If there is more than one fileNames passed in along the --only flag

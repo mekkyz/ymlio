@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -37,19 +36,51 @@ func convertJsonToYml(inputJsonName string) (string, error) {
 }
 
 // Convert YAML to JSON
-func convertYmlToJson(inputYmlName string) (string, error) {
-	// Making use of yq processor cli program to do the conversion
-	cmd := exec.Command("yq", "-r", "-o=json", inputYmlName)
-	// Get the output of the command
-	output, err := cmd.CombinedOutput()
-	// Get the filename to save it with
-	outputJsonName := strings.Replace(inputYmlName, ".yml", ".json", 1)
-	if err != nil {
-		log.Fatalln(err)
-	} else {
-		// Save the file as .json
-		os.WriteFile(outputJsonName, output, 0644)
+type stringMap map[string]interface{}
+
+func convertMapToStringMap(inputMap map[interface{}]interface{}) stringMap {
+	outputMap := make(stringMap)
+	for k, v := range inputMap {
+		stringKey, ok := k.(string)
+		if !ok {
+			continue
+		}
+
+		switch v := v.(type) {
+		case map[interface{}]interface{}:
+			outputMap[stringKey] = convertMapToStringMap(v)
+		default:
+			outputMap[stringKey] = v
+		}
 	}
+	return outputMap
+}
+
+func convertYmlToJson(inputYmlName string) (string, error) {
+	input, err := os.ReadFile(inputYmlName)
+	if err != nil {
+		return "", err
+	}
+
+	var data map[interface{}]interface{}
+	err = yaml.Unmarshal(input, &data)
+	if err != nil {
+		return "", err
+	}
+
+	stringData := convertMapToStringMap(data)
+
+	output, err := json.MarshalIndent(stringData, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	outputJsonName := strings.Replace(inputYmlName, ".yml", ".json", 1)
+	err = os.WriteFile(outputJsonName, output, 0644)
+	if err != nil {
+		return "", err
+	}
+
 	return outputJsonName, nil
 }
 
