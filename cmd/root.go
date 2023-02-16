@@ -4,10 +4,13 @@ Copyright © 2023 Mostafa Mekky <mos.mekky@gmail.com>
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -30,6 +33,25 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+	markdownFile := "ymlio-docs.md"
+	if _, err := os.Stat(markdownFile); errors.Is(err, os.ErrNotExist) {
+		fmt.Printf("%s not found, \ngenerating...\n", markdownFile)
+		// check if tmp_ymlio_doc folder exists.
+		path := "./tmp_ymlio_doc"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			err := os.Mkdir(path, 0700)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// generate markdownTree for all cobra.commands.
+		err := doc.GenMarkdownTree(rootCmd, "./tmp_ymlio_doc")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
