@@ -1,3 +1,6 @@
+/*
+Copyright © 2023 Mostafa Mekky <mos.mekky@gmail.com>
+*/
 package cmd
 
 import (
@@ -109,7 +112,7 @@ func saveImportData(importData []ImportData) {
 		// Read the file to be imported
 		file, err := os.ReadFile(data.FileNameToImport)
 		if err != nil {
-			log.Fatalln(err)
+			println("- Mild Error: Failed to find '", data.FileNameToImport, "'for importing data. Please make sure that it is in the correct directory to successfully import its content.")
 		}
 		err = os.WriteFile(data.FileName, file, 0666)
 		if err != nil {
@@ -212,14 +215,19 @@ func getFilteredKeys(keys []string, fileNames []string) []string {
 
 var splitCmd = &cobra.Command{
 	Use:   "split",
-	Short: "split command will split the file",
+	Short: "Split a yaml file into files.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check to see if the user pass in the yaml file to split
 		if len(args) < 1 {
 			// If it's not return the message below to the user
-			fmt.Println("Please provide a yaml file to split")
+			fmt.Println("Please provide a valid yaml file to split.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
 			return
 		}
+		// if len(args) > 1 {
+		// 	// If it's not return the message below to the user
+		// 	fmt.Println("Ymlio can only split ONE file at a time.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
+		// 	return
+		// }
 		// if the --only flag is passed in, we want to get all the filenames
 		var onlyFileNames []string
 		// If there is --only flag alongside the split command for example
@@ -229,15 +237,20 @@ var splitCmd = &cobra.Command{
 		}
 		// Get the Yaml file to split
 		fileLocation := args[0]
+		inputFile, err := os.Open(fileLocation)
+		if err != nil {
+			fmt.Println("Ymlio can't split because it can not find the file.\nPlease make sure that you are in the right directory.\nOr type the correct path before the file name.")
+			os.Exit(1)
+		}
+		defer inputFile.Close()
 
 		onlyFiles := args[1:]
 		if len(onlyFileNames) == 0 {
-			fmt.Println("Splitted: [all]", "\nFrom:", fileLocation, "\n-------------------")
+			fmt.Println("Splitted: [all]", "\nFrom:", fileLocation)
 		} else {
-			fmt.Println("Splitted:", onlyFiles, "\nFrom:", fileLocation, "\n-------------------")
+			fmt.Println("Splitted:", onlyFiles, "\nFrom:", fileLocation)
 		}
 
-		// yq -r -o=json sampleanchor.yml > config.json
 		// Run it through the HandleAnchor function then return the fileName
 		fileLocationTemp, err := handleAnchor(args[0])
 		// If there's an error while handling Anchor
