@@ -4,7 +4,6 @@ Copyright © 2023 Mostafa Mekky <mos.mekky@gmail.com>
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,18 +13,24 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "ymlio",
 	Short: "ymlio splits and combines yaml files",
-	Long: `
-ymlio is a CLI Application that allow users to easily split or combine yaml files.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("\nHello, welcome to ymlio: The yml file tool.\n\nymlio must be run with subcommands; do --help for more\n\n")
+	Long:  `Ymlio is a CLI Tool that allows users to easily combine or split yaml files.`,
 
-	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
+// This command has the sole role to make the tool show the help page upon typing the base command
+var blankCmd = &cobra.Command{
+	Use:    "",
+	Hidden: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		rootCmd.Help()
+	},
+}
+
 func Execute() {
+	rootCmd.SetHelpCommand(blankCmd)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
