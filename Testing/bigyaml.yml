@@ -93,10 +93,10 @@ user_props.yml:
     Textasdasdasdasd
 
 ./abspath:
-  __IMPORT: ich.md
+  __IMPORT: m1.md
 
 ./other:
-  __IMPORT: du.md
+  __IMPORT: m2.md
 
 anchorstest.yml:
   default: &default

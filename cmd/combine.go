@@ -17,10 +17,13 @@ import (
 func readFile(fileName string) string {
 	fileText, err := os.ReadFile(fileName)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 	return string(fileText)
 }
+
+// Option to append instead of overwrite
+var extend bool
 
 // Setting up the combine functionality
 var combineCmd = &cobra.Command{
@@ -32,21 +35,37 @@ var combineCmd = &cobra.Command{
 			fmt.Println("Please provide at least 2 yaml files to combine and a file name to combine the content in.\nYou need at least 3 arguments after combine.\nFor example:\nymlio combine a.yml b.yml c.yml -> This will combine the content of a.yml and b.yml into a file c.yml")
 			return
 		}
+		// Check that all input files exist
+		for _, fileName := range args[:len(args)-1] {
+			if _, err := os.Stat(fileName); err != nil {
+				log.Fatalln(err)
+			}
+		}
 		// Get the last file name passed in which the files will be combined
 		lastArgsFileName := args[len(args)-1]
+		// Check if extend is on and turn append on if --extend
+		var openFlags int
+		if extend {
+			openFlags = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		} else {
+			openFlags = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		}
 		// Open the last file passed in the command line for saving the combined file
-		file, err := os.OpenFile(lastArgsFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(lastArgsFileName, openFlags, 0644)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		defer file.Close()
-
 		// Create a map to hold all the YAML documents
 		allDocs := make(map[string]interface{})
-
 		// Iterate through all the filenames that we want to combine
-		fmt.Printf("Combined: ")
-		for _, fileName := range args[:len(args)-1] {
+		for i, fileName := range args[:len(args)-1] {
+			// Add the separator between files, except for the first file
+			if i > 0 {
+				if _, err := file.WriteString("---\n"); err != nil {
+					log.Fatalf("failed to write separator: %v", err)
+				}
+			}
 			// Checking if the file ends with .yml or .yaml
 			if strings.Contains(fileName, ".yml") && strings.HasSuffix(fileName, ".yml") || strings.Contains(fileName, ".yaml") && strings.HasSuffix(fileName, ".yaml") {
 				// Handle the anchors first
@@ -66,22 +85,28 @@ var combineCmd = &cobra.Command{
 			} else {
 				// If the filename isn't a yaml file, in this case it's a text file, read the content
 				fileText := readFile(fileName)
-				// Add the content as a string to the allDocs map with the file name as the key
-				allDocs[fileName] = fileText
+				// Add the content as a string to the allDocs map with the file name as the key, marked as "RAW"
+				allDocs[fileName] = map[string]string{"__RAW": strings.TrimSpace(fileText)}
 			}
-			fmt.Printf(fileName + " ")
+			// Add a newline separator between files, except for the last file
+			if i < len(args)-2 {
+				if _, err := file.WriteString("\n"); err != nil {
+					log.Fatalf("failed to write separator: %v", err)
+				}
+			}
 		}
-
 		// Write the combined YAML documents to the output file
 		encoder := yaml.NewEncoder(file)
+		encoder.SetIndent(2)
 		if err := encoder.Encode(allDocs); err != nil {
 			log.Fatalf("failed to encode YAML: %v", err)
 		}
-
-		fmt.Println("\nTo: " + lastArgsFileName)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(combineCmd)
+	// Add the --only flag to the split command
+	combineCmd.Flags().BoolVarP(&extend, "extend", "e", false, "Append data when combining instead of overwriting")
+	// splitYmlCmd.PersistentFlags().String("only", "", "Specify some YAML file to extract")
 }

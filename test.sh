@@ -57,12 +57,12 @@ EOF
     fi
 
     success
-    cleanexit 0
+    rm -f test.yaml test2.yml 
 }
 
 function test2() {
     CTEST=2
-    echo "Test 1: basic combine"
+    echo "Test 2: basic combine"
 
     tmpfile1=$(mktemp).yml
     cat <<EOF >"$tmpfile1"

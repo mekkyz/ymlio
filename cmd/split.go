@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -132,7 +133,13 @@ func getFileNameAndKeys(keys []string) ([]string, []ImportData) {
 		if strings.Contains(key, ".yml") || strings.Contains(key, ".yaml") {
 			// Split the key by ".yml" and extract the file name
 			splitYml := strings.Split(key, ".yml")
-			fileName := splitYml[0] + ".yml"
+			splitYaml := strings.Split(key, ".yaml")
+			var fileName string
+			if len(splitYml) > 1 {
+				fileName = splitYml[0] + ".yml"
+			} else {
+				fileName = splitYaml[0] + ".yaml"
+			}
 			// Check if the file name is not already in the fileNames array
 			if !slices.Contains(fileNames, key) {
 				// Add the file name to the fileNames array
@@ -147,6 +154,11 @@ func getFileNameAndKeys(keys []string) ([]string, []ImportData) {
 				fileNames = append(fileNames, key)
 			}
 		}
+		// Check others
+		if !slices.Contains(fileNames, key) {
+			// Add the key to the fileNames array
+			fileNames = append(fileNames, key)
+		}
 		// Check if the key contains "__import"
 		if strings.Contains(key, "__import") {
 			// split the key by ".__import" and extract the file name on each config
@@ -158,6 +170,7 @@ func getFileNameAndKeys(keys []string) ([]string, []ImportData) {
 				importData = append(importData, newImportData)
 			}
 		}
+
 	}
 	return fileNames, importData
 }
@@ -217,17 +230,7 @@ var splitCmd = &cobra.Command{
 	Use:   "split",
 	Short: "Split a yaml file into files.",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check to see if the user pass in the yaml file to split
-		if len(args) < 1 {
-			// If it's not return the message below to the user
-			fmt.Println("Please provide a valid yaml file to split.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
-			return
-		}
-		// if len(args) > 1 {
-		// 	// If it's not return the message below to the user
-		// 	fmt.Println("Ymlio can only split ONE file at a time.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
-		// 	return
-		// }
+
 		// if the --only flag is passed in, we want to get all the filenames
 		var onlyFileNames []string
 		// If there is --only flag alongside the split command for example
@@ -235,30 +238,68 @@ var splitCmd = &cobra.Command{
 			// Get the fileNames like database.yml spectra.yml
 			onlyFileNames = args[1:]
 		}
+		if only && len(onlyFileNames) == 0 {
+			log.Fatalln("\nYou have passed the only flag without any files. Please correct!\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
+		}
+
+		// Check to see if the user pass in the yaml file to split
+		if len(args) < 1 || (only && len(args) == 1) || (only && len(args) == len(onlyFileNames)+1) {
+			// If it's not return the message below to the user
+			fmt.Println("Please provide a valid yaml file to split.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
+			return
+		}
+		// Check is the user give more than one file to split
+		if len(args) > 1 && !only {
+			// If it's not return the message below to the user
+			fmt.Println("Ymlio can only split ONE file at a time.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
+			return
+		}
+
 		// Get the Yaml file to split
 		fileLocation := args[0]
-		inputFile, err := os.Open(fileLocation)
-		if err != nil {
-			fmt.Println("Ymlio can't split because it can not find the file.\nPlease make sure that you are in the right directory.\nOr type the correct path before the file name.")
-			os.Exit(1)
-		}
-		defer inputFile.Close()
-
-		onlyFiles := args[1:]
-		if len(onlyFileNames) == 0 {
-			fmt.Println("Splitted: [all]", "\nFrom:", fileLocation)
+		var inputFile *os.File
+		var tempFile *os.File
+		var err error
+		if fileLocation == "-" {
+			// Check if stdin has data
+			fileInfo, _ := os.Stdin.Stat()
+			if fileInfo.Mode()&os.ModeNamedPipe == 0 {
+				fmt.Println("Ymlio can't split because no data was provided on stdin.\nPlease pipe the input into Ymlio, or specify a file to split.")
+				os.Exit(1)
+			}
+			// Read from stdin if fileLocation is "-"
+			inputFile = os.Stdin
+			// Create a temporary file to run handleAnchor on
+			tempFile, err = os.CreateTemp("", "temp.yaml")
+			if err != nil {
+				// Exit the program with the error
+				log.Fatalln(err)
+			}
+			defer os.Remove(tempFile.Name())
+			defer tempFile.Close()
+			// Copy input from stdin to the temporary file
+			_, err = io.Copy(tempFile, os.Stdin)
+			if err != nil {
+				fmt.Println("Ymlio can't split because it can not read from stdin.\nPlease check if you have permission to read from stdin.")
+				os.Exit(1)
+			}
+			// Pass the temporary file to handleAnchor
+			fileLocation = tempFile.Name()
 		} else {
-			fmt.Println("Splitted:", onlyFiles, "\nFrom:", fileLocation)
-		}
+			inputFile, err = os.Open(fileLocation)
+			if err != nil {
+				fmt.Println("Ymlio can't split because it can not find the input file.\nPlease make sure that you are in the right directory.\nAlternatively type the correct path before the file name.\nIf you are piping the content please use '-' as file name")
+				os.Exit(1)
+			}
+			defer inputFile.Close()
 
+		}
 		// Run it through the HandleAnchor function then return the fileName
-		fileLocationTemp, err := handleAnchor(args[0])
-		// If there's an error while handling Anchor
+		fileLocationTemp, err := handleAnchor(fileLocation)
 		if err != nil {
 			// Exit the program with the error
 			log.Fatalln(err)
 		}
-
 		// Read the YAML file we want to split
 		viper.SetConfigFile(fileLocationTemp)
 		// Set the config type to yaml
@@ -271,12 +312,6 @@ var splitCmd = &cobra.Command{
 			return
 		}
 
-		/* err = os.Remove(fileLocationTemp)
-		if err != nil {
-			// exit the program with the error
-			log.Fatalln(err)
-		}
-		*/
 		// Get all the keys in the YAML file
 		keys := viper.AllKeys()
 
@@ -305,7 +340,7 @@ var splitCmd = &cobra.Command{
 				return
 			}
 
-			fmt.Println(string(output))
+			fmt.Print(string(output))
 			return
 		} else if len(onlyFileNames) > 1 {
 			// If there is more than one fileNames passed in along the --only flag

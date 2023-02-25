@@ -1,9 +1,0 @@
-production:
-  adapter: postgresql
-  database: chemotion
-  encoding: unicode
-  host: db
-  password: postgres
-  pool: 5
-  port: "5432"
-  username: postgres
