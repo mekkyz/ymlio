@@ -11,10 +11,10 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ymlio",
-	Short: "ymlio splits and combines yaml files",
-	Long:  `Ymlio is a CLI Tool that allows users to easily combine or split yaml files.`,
-
+	Use:     "ymlio",
+	Short:   "ymlio splits and combines yaml files",
+	Long:    `Ymlio is a CLI Tool that allows users to easily combine or split yaml files.`,
+	Version: "0.1",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
