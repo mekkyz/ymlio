@@ -267,8 +267,7 @@ var splitCmd = &cobra.Command{
 				fmt.Println("Ymlio can't split because no data was provided on stdin.\nPlease pipe the input into Ymlio, or specify a file to split.")
 				os.Exit(1)
 			}
-			// Read from stdin if fileLocation is "-"
-			inputFile = os.Stdin
+
 			// Create a temporary file to run handleAnchor on
 			tempFile, err = os.CreateTemp("", "temp.yaml")
 			if err != nil {
