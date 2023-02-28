@@ -243,7 +243,7 @@ var splitCmd = &cobra.Command{
 		}
 
 		// Check to see if the user pass in the yaml file to split
-		if len(args) < 1 || (only && len(args) == 1) || (only && len(args) == len(onlyFileNames)+1) {
+		if len(args) < 1 || (only && len(args) == 1) {
 			// If it's not return the message below to the user
 			fmt.Println("Please provide a valid yaml file to split.\nFor example:\nymlio split [YAMLFILE]\nFor only some files; use:\nymlio [YAMLFILE] --only [FILES TO EXTRACT]")
 			return
