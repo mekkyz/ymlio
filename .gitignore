@@ -1,8 +1,1 @@
-main
-test.sh
-all.yml
-converter.yml
-database.yml
-docker-compose.yml
-steps.md
-vendor/
+dist/
