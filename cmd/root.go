@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 	Use:     "ymlio",
 	Short:   "ymlio splits and combines yaml files",
 	Long:    `Ymlio is a CLI Tool that allows users to easily combine or split yaml files.`,
-	Version: "0.1",
+	Version: "0.1.3",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
