@@ -1,4 +1,4 @@
-module ymlio
+module github.com/mekkyz/ymlio
 
 go 1.20
 

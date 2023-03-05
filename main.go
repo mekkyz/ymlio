@@ -4,7 +4,7 @@ Copyright © 2023 Mostafa Mekky <mos.mekky@gmail.com>
 package main
 
 import (
-	"ymlio/cmd"
+	"github.com/mekkyz/ymlio/cmd"
 )
 
 func main() {
