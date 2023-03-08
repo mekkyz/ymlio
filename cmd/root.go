@@ -9,18 +9,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const ymlioVersion = "0.1.5"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "ymlio",
 	Short:   "ymlio splits and combines yaml files",
 	Long:    `Ymlio is a CLI Tool that allows users to easily combine or split yaml files.`,
-	Version: "0.1.4",
+	Version: ymlioVersion,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-// This command has the sole role to make the tool show the help page upon typing the base command
+// This command has the sole role to make the tool show the help page upon typing the base command `ymlio`
 var blankCmd = &cobra.Command{
 	Use:    "",
 	Hidden: true,
